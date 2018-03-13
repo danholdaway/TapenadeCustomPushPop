@@ -102,4 +102,7 @@ enddo
 call finalize_cp_iter
 ```
 
+--------------
+
+The directory Tapenade/ shows how the tlm and adm are generated. The standard Tapnenade output can be seen and compared between the files in Tapenade/tlm /adm and at the top level.
 
