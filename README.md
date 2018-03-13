@@ -32,7 +32,36 @@ call pushinteger4array(iarray,size) -> call pushintegerarray(iarray,size)
 
 and similarly for pop. This can easily be achieved with sed replace commands for large codes.
 
-The custom interface builds a static array for each 'calling module'. In an atmopsheric model, for example, modules might be the dyn core and each physics routine. Before the adjoint of that component is called routines are placed around them to switch the active module in tapenade_iter.F90
+The custom interface builds a static array for each 'calling module'. In an atmopsheric model, for example, modules might be the dyn core and each physics routine. 
+
+First some details about the module must be initialzed for to tell tapenade_iter.F90 what to do. First an integer has to be defined that is associated only with this module and each integer has to be less than or equal to the total number of modules.
+
+```
+cp_adv_ind = 1 
+cp_iter(cp_adv_ind)%my_name(1:3) = 'adv'            !Give myself a name
+cp_iter(cp_adv_ind)%cp_test = .false.               !Run in test mode?
+cp_iter(cp_adv_ind)%cp_rep = .false.                !Write reports on memory use etc?
+```
+
+The below are optional and their default values are shown. check_st tells the code to perform a check on whether a checkpoint was necessary. This will be slower than not doing so but only at one iteration. The other variables are used to debug the code. One runs a single iteration at a time and values to feed in will be output. So dim_st are given with cp_test = .true. on iteration 1. dim_cp are given after iteration 2 is run with the appropriate values in dim_st. Essentially dimensions for checkpoint arrays are learnt from the previous iteration so when debugging these have to be provided.
+
+```
+cp_iter(cp_adv_ind)%check_st_control = .false.      !Check whether checkpoints are necessary?
+cp_iter(cp_adv_ind)%check_st_integer = .false.      !Check whether checkpoints are necessary?
+cp_iter(cp_adv_ind)%check_st_real_r4 = .false.      !Check whether checkpoints are necessary?
+cp_iter(cp_adv_ind)%check_st_real_r8 = .false.      !Check whether checkpoints are necessary?
+cp_iter(cp_adv_ind)%test_dim_st_control = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_st_integer = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_st_real_r4 = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_st_real_r8 = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_cp_control = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_cp_integer = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_cp_real_r4 = 0         !Testmode, run one iteration at a time
+cp_iter(cp_adv_ind)%test_dim_cp_real_r8 = 0         !Testmode, run one iteration at a time
+```
+
+
+Before the adjoint of that component is called routines are placed around them to switch the active module in tapenade_iter.F90
 
 For example the code inside a particular module might look like:
 ```
@@ -49,6 +78,7 @@ call some_science_bwd(arguments)
 call cp_mod_end(mod_ind)
 ```
 ini, mid and end are routines at the lower level that adjust pointers to the static arrays, reset counters and can print information about checkpointing, if necessary.
+
 
 --------------
 
