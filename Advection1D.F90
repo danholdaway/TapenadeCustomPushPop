@@ -24,18 +24,18 @@ implicit none
 !Model parameters
 integer, parameter :: ni = 2                     !Number of iterations
 integer, parameter :: nx = 2048                  !Number of grid points
-real(8), parameter :: dx = 1.0/nx                !Grid spacing
-real(8), parameter :: c = 0.1                    !Courant number
-real(8), parameter :: dt = C*dx                  !Time step
+real   , parameter :: dx = 1.0/nx                !Grid spacing
+real   , parameter :: c = 0.1                    !Courant number
+real   , parameter :: dt = C*dx                  !Time step
 integer, parameter :: nt = ceiling((1.0/(dt)))   !Number of time steps
-real(8), parameter :: pi = 3.1415926535897932384 !pi
+real   , parameter :: pi = 3.1415926535897932384 !pi
 integer, parameter :: initcase = 1               !Reference state: 1 = sine wave, 2 = step
 integer, parameter :: initcasep = 1              !Perturbation: 1 = sine wave, 2 = step
 
 !Model variables
-real(8), dimension(nx) :: x0, x0p
-real(8), dimension(nx) :: x, y, xp, yp, ynl1, ynl2
-real(8) :: U, UP, U0, UP0
+real, dimension(nx) :: x0, x0p
+real, dimension(nx) :: x, y, xp, yp, ynl1, ynl2
+real :: U, UP, U0, U0p, scalefac
 
 !Model grid
 type(gridind_type) :: grid
@@ -47,7 +47,7 @@ integer :: n, j
 !Custom checkpointing
 logical :: do_custom_cp
 integer :: cp_adv_ind
-real(8) :: start(3), finish(3)
+real    :: start(3), finish(3)
 
 
 !Set up the grid
@@ -81,27 +81,24 @@ elseif (initcase == 2) then
   enddo
 endif
 
+U0 = 1.0
 
 !Initial perturbation state
 !--------------------------
-if (initcasep == 1) then
-  !Sin wave
-  x0p = 1.0e-5 * 0.5*(1.0+sin(2.0*pi*grid%x))
-elseif (initcasep == 2) then
-  !Step function
-  x0p = 0.0
-  do j = 1,nx
-    if (grid%x(j) .gt. 0.25 .and. grid%x(j) .lt. 0.75) then
-      x0p(j)=1.0e-5
-    endif
-  enddo
+if (precision(U0) == 6) then
+  scalefac = 1.0e-1
+elseif (precision(U0) == 15) then
+  scalefac = 1.0e-6
+else
+  print*, 'ERROR: unsupported precision'
+  stop
 endif
 
+print*, 'Perturbation is reference state scaled by: ', scalefac
+print*, ' '
 
-!Winds
-!-----
-U0 = 1.0
-Up0 = 1.0e-5
+x0p = x0 * scalefac
+U0p = 0.0
 
 !Setup the custom checkpointing (top level, i.e. if we had more than just advection)
 !-----------------------------------------------------------------------------------
@@ -164,32 +161,36 @@ do n = 1,4
 
    !Call again so the tangent linear test can be computed
    x = x0 + x0p
-   U = U0 + Up0
+   U = U0 + U0p
    call advect_1d(nx,nt,x,ynl2,C,dt,dx,U,grid)
 
    !Call the tangent linear model
    x = x0
    U = U0
    xp = x0p
-   Up = Up0
+   Up = U0p
    call cpu_time(start(1))
    call advect_1d_tlm(nx,nt,x,xp,y,yp,C,dt,dx,U,Up,grid)
    call cpu_time(finish(1))
+
+   !Done with perturbation inputs
+   xp = 0.0
+   Up = 0.0
 
    print*, '   Tangent linear test [y(x+dx)-y(x)]/Mdx: ', maxval((ynl2 - ynl1)/yp)
 
    !Compute first part of the adjoint test
    do j = 1,nx
-      dot(1) = dot(1) + yp(j) * yp(j)
+      dot(1) = dot(1) + real(yp(j),8) * real(yp(j),8)
    enddo
 
    !Initilize the this iterative step
    if (do_custom_cp) call cp_mod_ini(cp_adv_ind)
 
    !Call the forward sweep for the adjoint
-   x = x0
-   U = U0
    if (n<=3 .or. .not.do_custom_cp) then
+      x = x0
+      U = U0
       call cpu_time(start(2))
       !Only need to call the forward scheme if in first few iterations
       call advect_1d_fwd(nx,nt,x,y,C,dt,dx,U,grid)
@@ -204,7 +205,6 @@ do n = 1,4
 
    !Call the backward sweep for the adjoint
    call cpu_time(start(3))
-   Up = 0.0
    call advect_1d_bwd(nx,nt,x,xp,y,yp,C,dt,dx,U,Up,grid)
    call cpu_time(finish(3))
 
@@ -212,9 +212,9 @@ do n = 1,4
 
    !Compute second part of the adjoint test
    do j = 1,nx
-      dot(2) = dot(2) + xp(j) * x0p(j)
+      dot(2) = dot(2) + real(xp(j),8) * real(x0p(j),8)
    enddo
-   dot(2) = dot(2) + Up * Up0
+   dot(2) = dot(2) + real(Up,8) * real(U0p,8)
 
    !Print adjoint dor product test results
    print*, '   Adjoint test: ', (dot(2)-dot(1))/dot(2)
@@ -245,7 +245,7 @@ contains
 subroutine writetotxt(x,nx,filename)
 
  integer, intent(in) :: nx
- real(8), intent(in) :: x(nx)
+ real   , intent(in) :: x(nx)
  character(len=*), intent(in) :: filename
 
  integer :: n

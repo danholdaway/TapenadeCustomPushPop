@@ -346,10 +346,22 @@ contains
         endif
       
         !Allocate space for checkpoint status
-        if (am%check_st_control) allocate(am%st_control(cp_nt,maxval(am%count_psh(:,idx_control)))); am%st_control = 1
-        if (am%check_st_integer) allocate(am%st_integer(cp_nt,maxval(am%count_psh(:,idx_integer)))); am%st_integer = 1
-        if (am%check_st_real_r4) allocate(am%st_real_r4(cp_nt,maxval(am%count_psh(:,idx_real_r4)))); am%st_real_r4 = 1
-        if (am%check_st_real_r8) allocate(am%st_real_r8(cp_nt,maxval(am%count_psh(:,idx_real_r8)))); am%st_real_r8 = 1
+        if (am%check_st_control) then
+           allocate(am%st_control(cp_nt,maxval(am%count_psh(:,idx_control))))
+           am%st_control = 1
+        endif
+        if (am%check_st_integer) then
+           allocate(am%st_integer(cp_nt,maxval(am%count_psh(:,idx_integer))))
+           am%st_integer = 1
+        endif
+        if (am%check_st_real_r4) then
+           allocate(am%st_real_r4(cp_nt,maxval(am%count_psh(:,idx_real_r4))))
+           am%st_real_r4 = 1
+        endif
+        if (am%check_st_real_r8) then
+           allocate(am%st_real_r8(cp_nt,maxval(am%count_psh(:,idx_real_r8))))
+           am%st_real_r8 = 1
+        endif
    
         !Once allocated reset counters
         am%count_psh = 0

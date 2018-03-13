@@ -7,7 +7,7 @@ MODULE ADVECTION_MOD_DIFF
   PUBLIC advect_1d, gridind_type
   PUBLIC advect_1d_tlm
   TYPE GRIDIND_TYPE
-      REAL*8, ALLOCATABLE :: x(:)
+      REAL, ALLOCATABLE :: x(:)
       INTEGER, ALLOCATABLE :: fx(:)
       INTEGER, ALLOCATABLE :: f1x(:)
       INTEGER, ALLOCATABLE :: g1x(:)
@@ -15,28 +15,27 @@ MODULE ADVECTION_MOD_DIFF
 
 CONTAINS
 !  Differentiation of advect_1d in forward (tangent) mode:
-!   variations   of useful results: x y
+!   variations   of useful results: y
 !   with respect to varying inputs: u x
-!   RW status of diff variables: u:in x:in-zero y:out
+!   RW status of diff variables: u:in x:in y:out
   SUBROUTINE ADVECT_1D_TLM(nx, nt, x, x_tl, y, y_tl, c, dt, dx, u, u_tl&
 &   , grid)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nx, nt
-    REAL*8, INTENT(IN) :: c, dt, dx, u
-    REAL*8, INTENT(IN) :: u_tl
-    REAL*8, INTENT(INOUT) :: x(nx)
-    REAL*8, INTENT(INOUT) :: x_tl(nx)
-    REAL*8, INTENT(OUT) :: y(nx)
-    REAL*8, INTENT(OUT) :: y_tl(nx)
+    REAL, INTENT(IN) :: c, dt, dx, u
+    REAL, INTENT(IN) :: u_tl
+    REAL, INTENT(IN) :: x(nx)
+    REAL, INTENT(IN) :: x_tl(nx)
+    REAL, INTENT(OUT) :: y(nx)
+    REAL, INTENT(OUT) :: y_tl(nx)
     TYPE(GRIDIND_TYPE), INTENT(IN) :: grid
     INTEGER :: t, j
-    REAL*8 :: xold(nx), xhalf(nx)
-    REAL*8 :: xold_tl(nx), xhalf_tl(nx)
+    REAL :: xold(nx), xhalf(nx)
+    REAL :: xold_tl(nx), xhalf_tl(nx)
     xold_tl = x_tl
     xold = x
-    x = 0.0
-    xhalf_tl = 0.0_8
-!Advect once around the domain
+    xhalf_tl = 0.0
+!Advect once around the domain (if u = 1)
     DO t=1,nt
       DO j=1,nx
         xhalf_tl(grid%fx(j)) = 0.5*(xold_tl(grid%fx(j))+xold_tl(grid%g1x&
@@ -54,20 +53,18 @@ CONTAINS
     END DO
     y_tl = xold_tl
     y = xold
-    x_tl = 0.0_8
   END SUBROUTINE ADVECT_1D_TLM
   SUBROUTINE ADVECT_1D(nx, nt, x, y, c, dt, dx, u, grid)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nx, nt
-    REAL*8, INTENT(IN) :: c, dt, dx, u
-    REAL*8, INTENT(INOUT) :: x(nx)
-    REAL*8, INTENT(OUT) :: y(nx)
+    REAL, INTENT(IN) :: c, dt, dx, u
+    REAL, INTENT(IN) :: x(nx)
+    REAL, INTENT(OUT) :: y(nx)
     TYPE(GRIDIND_TYPE), INTENT(IN) :: grid
     INTEGER :: t, j
-    REAL*8 :: xold(nx), xhalf(nx)
+    REAL :: xold(nx), xhalf(nx)
     xold = x
-    x = 0.0
-!Advect once around the domain
+!Advect once around the domain (if u = 1)
     DO t=1,nt
       DO j=1,nx
         xhalf(grid%fx(j)) = 0.5*(xold(grid%fx(j))+xold(grid%g1x(j))) - &

@@ -6,7 +6,7 @@ private
 public advect_1d, gridind_type
 
 type gridind_type
- real(8), allocatable :: x(:)
+ real   , allocatable :: x(:)
  integer, allocatable :: fx(:)
  integer, allocatable :: f1x(:)
  integer, allocatable :: g1x(:)
@@ -19,16 +19,15 @@ contains
   implicit none
  
   integer, intent(in) :: nx, nt
-  real(8), intent(in) :: C, dt, dx, U
-  real(8), intent(inout) :: x(nx)
-  real(8), intent(out) :: y(nx)
+  real, intent(in) :: C, dt, dx, U
+  real, intent(in) :: x(nx)
+  real, intent(out) :: y(nx)
   type(gridind_type), intent(in) :: grid
  
   integer :: t, j
-  real(8) :: xold(nx), xhalf(nx)
+  real    :: xold(nx), xhalf(nx)
  
   xold = x
-  x = 0.0
 
   !Advect once around the domain (if u = 1)
   do t = 1,nt

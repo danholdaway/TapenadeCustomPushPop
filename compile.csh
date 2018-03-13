@@ -16,14 +16,14 @@ if ($1 == "int") then
   module load comp/intel-18.0.1.163
   set comp = "ifort"
   set ccomp = "icc"
-  set opts = "-O3 -r8 -traceback"
+  set opts = "-r8 -traceback"
 
 else if ($1 == "gcc") then
 
   module load other/comp/gcc-7.2
   set comp = "gfortran"
   set ccomp = "gcc"
-  set opts = "-O3 -fdefault-real-8 -fno-backtrace"
+  set opts = "-fdefault-real-8 -fno-backtrace"
 
 endif
 

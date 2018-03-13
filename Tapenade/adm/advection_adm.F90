@@ -7,7 +7,7 @@ MODULE ADVECTION_MOD_DIFF
   PUBLIC advect_1d, gridind_type
   PUBLIC advect_1d_fwd, advect_1d_bwd
   TYPE GRIDIND_TYPE
-      REAL*8, ALLOCATABLE :: x(:)
+      REAL, ALLOCATABLE :: x(:)
       INTEGER, ALLOCATABLE :: fx(:)
       INTEGER, ALLOCATABLE :: f1x(:)
       INTEGER, ALLOCATABLE :: g1x(:)
@@ -15,22 +15,22 @@ MODULE ADVECTION_MOD_DIFF
 
 CONTAINS
 !  Differentiation of advect_1d in reverse (adjoint) mode, forward sweep (with options split(advection_mod.advect_1d)):
-!   gradient     of useful results: u y
+!   gradient     of useful results: u x y
 !   with respect to varying inputs: u x y
   SUBROUTINE ADVECT_1D_FWD(nx, nt, x, y, c, dt, dx, u, grid)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nx, nt
-    REAL*8, INTENT(IN) :: c, dt, dx, u
-    REAL*8, INTENT(INOUT) :: x(nx)
-    REAL*8 :: y(nx)
+    REAL, INTENT(IN) :: c, dt, dx, u
+    REAL, INTENT(IN) :: x(nx)
+    REAL :: y(nx)
     TYPE(GRIDIND_TYPE), INTENT(IN) :: grid
     INTEGER :: t, j
-    REAL*8 :: xold(nx), xhalf(nx)
+    REAL :: xold(nx), xhalf(nx)
     xold = x
-!Advect once around the domain
+!Advect once around the domain (if u = 1)
     DO t=1,nt
       DO j=1,nx
-        CALL PUSHREAL8(xhalf(grid%fx(j)))
+        CALL PUSHREAL4(xhalf(grid%fx(j)))
         xhalf(grid%fx(j)) = 0.5*(xold(grid%fx(j))+xold(grid%g1x(j))) - &
 &         0.5*c*(xold(grid%fx(j))-xold(grid%g1x(j)))
       END DO
@@ -39,32 +39,32 @@ CONTAINS
 &         )-xhalf(grid%fx(j)))
       END DO
     END DO
-    CALL PUSHREAL8ARRAY(xhalf, nx)
+    CALL PUSHREAL4ARRAY(xhalf, nx)
   END SUBROUTINE ADVECT_1D_FWD
 !  Differentiation of advect_1d in reverse (adjoint) mode, backward sweep (with options split(advection_mod.advect_1d)):
-!   gradient     of useful results: u y
+!   gradient     of useful results: u x y
 !   with respect to varying inputs: u x y
-!   RW status of diff variables: u:incr x:out y:in-zero
+!   RW status of diff variables: u:incr x:incr y:in-zero
   SUBROUTINE ADVECT_1D_BWD(nx, nt, x, x_ad, y, y_ad, c, dt, dx, u, u_ad&
 &   , grid)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nx, nt
-    REAL*8, INTENT(IN) :: c, dt, dx, u
-    REAL*8 :: u_ad
-    REAL*8, INTENT(INOUT) :: x(nx)
-    REAL*8, INTENT(INOUT) :: x_ad(nx)
-    REAL*8 :: y(nx)
-    REAL*8 :: y_ad(nx)
+    REAL, INTENT(IN) :: c, dt, dx, u
+    REAL :: u_ad
+    REAL, INTENT(IN) :: x(nx)
+    REAL :: x_ad(nx)
+    REAL :: y(nx)
+    REAL :: y_ad(nx)
     TYPE(GRIDIND_TYPE), INTENT(IN) :: grid
     INTEGER :: t, j
-    REAL*8 :: xold(nx), xhalf(nx)
-    REAL*8 :: xold_ad(nx), xhalf_ad(nx)
-    REAL*8 :: temp_ad
-    REAL*8 :: temp_ad0
-    CALL POPREAL8ARRAY(xhalf, nx)
-    xold_ad = 0.0_8
+    REAL :: xold(nx), xhalf(nx)
+    REAL :: xold_ad(nx), xhalf_ad(nx)
+    REAL :: temp_ad
+    REAL :: temp_ad0
+    CALL POPREAL4ARRAY(xhalf, nx)
+    xold_ad = 0.0
     xold_ad = y_ad
-    xhalf_ad = 0.0_8
+    xhalf_ad = 0.0
     DO t=nt,1,-1
       DO j=nx,1,-1
         temp_ad0 = -(dt*u*xold_ad(grid%fx(j))/dx)
@@ -74,31 +74,29 @@ CONTAINS
 &         grid%fx(j))/dx
       END DO
       DO j=nx,1,-1
-        CALL POPREAL8(xhalf(grid%fx(j)))
+        CALL POPREAL4(xhalf(grid%fx(j)))
         temp_ad = -(c*0.5*xhalf_ad(grid%fx(j)))
         xold_ad(grid%fx(j)) = xold_ad(grid%fx(j)) + temp_ad + 0.5*&
 &         xhalf_ad(grid%fx(j))
         xold_ad(grid%g1x(j)) = xold_ad(grid%g1x(j)) + 0.5*xhalf_ad(grid%&
 &         fx(j)) - temp_ad
-        xhalf_ad(grid%fx(j)) = 0.0_8
+        xhalf_ad(grid%fx(j)) = 0.0
       END DO
     END DO
-    x_ad = 0.0_8
-    x_ad = xold_ad
-    y_ad = 0.0_8
+    x_ad = x_ad + xold_ad
+    y_ad = 0.0
   END SUBROUTINE ADVECT_1D_BWD
   SUBROUTINE ADVECT_1D(nx, nt, x, y, c, dt, dx, u, grid)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nx, nt
-    REAL*8, INTENT(IN) :: c, dt, dx, u
-    REAL*8, INTENT(INOUT) :: x(nx)
-    REAL*8, INTENT(OUT) :: y(nx)
+    REAL, INTENT(IN) :: c, dt, dx, u
+    REAL, INTENT(IN) :: x(nx)
+    REAL, INTENT(OUT) :: y(nx)
     TYPE(GRIDIND_TYPE), INTENT(IN) :: grid
     INTEGER :: t, j
-    REAL*8 :: xold(nx), xhalf(nx)
+    REAL :: xold(nx), xhalf(nx)
     xold = x
-    x = 0.0
-!Advect once around the domain
+!Advect once around the domain (if u = 1)
     DO t=1,nt
       DO j=1,nx
         xhalf(grid%fx(j)) = 0.5*(xold(grid%fx(j))+xold(grid%g1x(j))) - &
