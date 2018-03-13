@@ -55,7 +55,7 @@ module tapenade_iter
  type cp_iter_type
 
    !User provided
-   character(len=3) :: my_name           !User defined name for this module
+   character(len=3) :: my_name            !User defined name for this module
    logical :: cp_test                     !Testing mode
    logical :: cp_rep                      !Write reports on checkpointing
    logical :: cp_nscp                     !Checkpoint all n-splits?

@@ -23,7 +23,7 @@ implicit none
 
 !Model parameters
 integer, parameter :: ni = 2                     !Number of iterations
-integer, parameter :: nx = 640                   !Number of grid points
+integer, parameter :: nx = 2048                  !Number of grid points
 real(8), parameter :: dx = 1.0/nx                !Grid spacing
 real(8), parameter :: c = 0.1                    !Courant number
 real(8), parameter :: dt = C*dx                  !Time step
@@ -125,13 +125,21 @@ if (do_custom_cp) then
                  !This allows multiple subroutines to create their own static arrays for 
                  !storing checkpoints
 
-  cp_iter(cp_adv_ind)%my_name(1:3) = 'adv'         !Give myself a name
-  cp_iter(cp_adv_ind)%cp_test = .false.            !Run in test mode?
-  cp_iter(cp_adv_ind)%cp_rep = .false.              !Write reports on memory use etc?
-  cp_iter(cp_adv_ind)%check_st_control = .false.   !Check whether checkpoints are necessary?
-  cp_iter(cp_adv_ind)%check_st_integer = .false.   !Check whether checkpoints are necessary?
-  cp_iter(cp_adv_ind)%check_st_real_r4 = .false.   !Check whether checkpoints are necessary?
-  cp_iter(cp_adv_ind)%check_st_real_r8 = .false.   !Check whether checkpoints are necessary?
+  cp_iter(cp_adv_ind)%my_name(1:3) = 'adv'            !Give myself a name
+  cp_iter(cp_adv_ind)%cp_test = .false.               !Run in test mode?
+  cp_iter(cp_adv_ind)%cp_rep = .false.                !Write reports on memory use etc?
+  cp_iter(cp_adv_ind)%check_st_control = .false.      !Check whether checkpoints are necessary?
+  cp_iter(cp_adv_ind)%check_st_integer = .false.      !Check whether checkpoints are necessary?
+  cp_iter(cp_adv_ind)%check_st_real_r4 = .false.      !Check whether checkpoints are necessary?
+  cp_iter(cp_adv_ind)%check_st_real_r8 = .false.      !Check whether checkpoints are necessary?
+  cp_iter(cp_adv_ind)%test_dim_st_control = 0         !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_st_integer = 0         !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_st_real_r4 = 0         !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_st_real_r8 = 4096001   !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_cp_control = 0         !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_cp_integer = 0         !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_cp_real_r4 = 0         !Testmode, run one iteration at a time
+  cp_iter(cp_adv_ind)%test_dim_cp_real_r8 = 4096640   !Testmode, run one iteration at a time
 endif
 
 !call writetotxt(x0,nx,"intitial.txt")
@@ -199,6 +207,8 @@ do n = 1,4
    Up = 0.0
    call advect_1d_bwd(nx,nt,x,xp,y,yp,C,dt,dx,U,Up,grid)
    call cpu_time(finish(3))
+
+   if (do_custom_cp) call cp_mod_end
 
    !Compute second part of the adjoint test
    do j = 1,nx
