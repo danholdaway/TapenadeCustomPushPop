@@ -233,9 +233,6 @@ deallocate(grid%fx)
 deallocate(grid%f1x)
 deallocate(grid%g1x)
 
-!Module level finalize
-if (do_custom_cp .and. .not.cp_iter(cp_adv_ind)%cp_test) call cp_mod_end
-
 !Global finialize
 if (do_custom_cp) call finalize_cp_iter
 
