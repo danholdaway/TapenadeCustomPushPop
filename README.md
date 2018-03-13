@@ -35,7 +35,7 @@ and similarly for pop. This can easily be achieved with sed replace commands for
 The custom interface builds a static array for each 'calling module'. In an atmopsheric model, for example, modules might be the dyn core and each physics routine. Before the adjoint of that component is called routines are placed around them to switch the active module in tapenade_iter.F90
 
 For example the code inside a particular module might look like:
-
+```
 call cp_mod_ini(mod_ind)
 
 if (iter < 4) then
@@ -47,13 +47,13 @@ call cp_mod_mid(mod_ind)
 call some_science_bwd(arguments)
 
 call cp_mod_end(mod_ind)
-
+```
 ini, mid and end are routines at the lower level that adjust pointers to the static arrays, reset counters and can print information about checkpointing, if necessary.
 
 --------------
 
 At the highest level of the code and outside the iterative loop some general initialization and finalization are required, called with e.g.
-
+```
 cp_iter_controls%cp_i      First iteration, 1=use tool, 0=pass through and use regular Tapenade approach
 cp_iter_controls%cp_nt     Number of time steps. Optionally arrange checkpoints by timestep
 cp_iter_controls%cp_t      Set to 1
@@ -70,6 +70,6 @@ do iter = 1,niter
 enddo
 
 call finalize_cp_iter
-
+```
 
 
