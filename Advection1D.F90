@@ -86,13 +86,13 @@ endif
 !--------------------------
 if (initcasep == 1) then
   !Sin wave
-  x0p = 1.0e-4 * 0.5*(1.0+sin(2.0*pi*grid%x))
+  x0p = 1.0e-5 * 0.5*(1.0+sin(2.0*pi*grid%x))
 elseif (initcasep == 2) then
   !Step function
   x0p = 0.0
   do j = 1,nx
     if (grid%x(j) .gt. 0.25 .and. grid%x(j) .lt. 0.75) then
-      x0p(j)=1.0e-4
+      x0p(j)=1.0e-5
     endif
   enddo
 endif
@@ -100,8 +100,8 @@ endif
 
 !Winds
 !-----
-U0 = 1.0_8
-Up0 = 0.0_8
+U0 = 1.0
+Up0 = 1.0e-5
 
 !Setup the custom checkpointing (top level, i.e. if we had more than just advection)
 !-----------------------------------------------------------------------------------
@@ -196,6 +196,7 @@ do n = 1,4
 
    !Call the backward sweep for the adjoint
    call cpu_time(start(3))
+   Up = 0.0
    call advect_1d_bwd(nx,nt,x,xp,y,yp,C,dt,dx,U,Up,grid)
    call cpu_time(finish(3))
 
@@ -203,6 +204,7 @@ do n = 1,4
    do j = 1,nx
       dot(2) = dot(2) + xp(j) * x0p(j)
    enddo
+   dot(2) = dot(2) + Up * Up0
 
    !Print adjoint dor product test results
    print*, '   Adjoint test: ', (dot(2)-dot(1))/dot(2)
