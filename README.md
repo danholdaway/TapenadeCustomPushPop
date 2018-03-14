@@ -15,13 +15,21 @@ The enclosed software demonstrates the use of a custom interface to the Tapenade
 * User can specify the amount of memory avaialble and the tool will revert to the usual Tapenade approach if exceeded.
 * We plan to add the ability to profile particular subroutines memory footprint and number of calls to push/pop.
 
-### Getting Started
+### Compiling
 
-Compile the Tapenade/adBuffer.f and Tapenade/adStack.c following the instuctions issued by Inria Tapenade.
+Compile the Tapenade/adBuffer.f and Tapenade/adStack.c following the instuctions issued by Inria Tapenade. Usually just something like:
 
-To compile the advection scheme, edit the compile.csh file with appropriate definition of intel and or gfortran compiler and issue ./compile.csh int or ./compile.csh gcc
+gfortran -c adBuffer.f
+gcc -c adStack.c
+
+To compile the advection scheme and its TLM/ADM, edit the compile.csh file with appropriate definition of intel and or gfortran compiler and issue ./compile.csh int or ./compile.csh gcc
 
 Run the code with ./adv_1d.x
+
+Things you can do:
+* Compile in single or double precision.
+* Note that the cost of 'fwd' goes to zero on the fourth iteration.
+* Check that the adjoint dot product test case passes with the custom interface.
 
 ### TLM/ADM Development
 
